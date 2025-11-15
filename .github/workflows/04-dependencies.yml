@@ -21,19 +21,9 @@ jobs:
         with:
           python-version: '3.10'
           # Cache automatique des dépendances pip
-          #cache: 'pip'
+          cache: 'pip'
       
-      # Créer un fichier requirements.txt pour l'exemple
-      - name: Créer requirements.txt
-        run: |
-          cat > requirements.txt << 'EOF'
-          numpy==1.24.3
-          pandas==2.0.3
-          scikit-learn==1.3.0
-          matplotlib==3.7.2
-          seaborn==0.12.2
-          joblib==1.3.2
-          EOF
+      
       
       # Installation des dépendances (sera cachée)
       - name: Installer les dépendances
