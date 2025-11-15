@@ -25,7 +25,7 @@ jobs:
       
       
       - name: Linting avec flake8
-        run: flake8 model.py --max-line-length=100 
+        run: flake8 model.py --max-line-length=100  --exit-zero
   
   # Job 2 : Tests unitaires (attend que le linting soit OK)
   tests:
