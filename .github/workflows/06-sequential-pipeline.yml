@@ -22,21 +22,10 @@ jobs:
       - name: Installer flake8
         run: pip install flake8
       
-      - name: Créer un script à valider
-        run: |
-          cat > model.py << 'EOF'
-          import numpy as np
-          from sklearn.ensemble import RandomForestClassifier
-          
-          def train_model(X, y):
-              """Entraîne un modèle Random Forest"""
-              model = RandomForestClassifier(n_estimators=100, random_state=42)
-              model.fit(X, y)
-              return model
-          EOF
+      
       
       - name: Linting avec flake8
-        run: flake8 model.py --max-line-length=100
+        run: flake8 model.py --max-line-length=100 
   
   # Job 2 : Tests unitaires (attend que le linting soit OK)
   tests:
