@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.10'
           # Cache automatique des dépendances pip
-          cache: 'pip'
+          #cache: 'pip'
       
       # Créer un fichier requirements.txt pour l'exemple
       - name: Créer requirements.txt
