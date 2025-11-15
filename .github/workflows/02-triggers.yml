@@ -1,0 +1,58 @@
+# Workflow 02 : Les Déclencheurs (Triggers)
+# Objectif : Comprendre les différents événements qui peuvent lancer un workflow
+
+name: 02 - Déclencheurs Variés
+
+# Plusieurs façons de déclencher un workflow
+on:
+  # 1. À chaque push sur n'importe quelle branche
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/*'  # Toutes les branches qui commencent par feature/
+  
+  # 2. À chaque Pull Request
+  pull_request:
+    branches:
+      - main
+  
+  # 3. Déclenchement manuel via l'interface GitHub
+  workflow_dispatch:
+    inputs:
+      nom_modele:
+        description: 'Nom du modèle ML à entraîner'
+        required: true
+        default: 'random_forest'
+        type: choice
+        options:
+          - random_forest
+          - xgboost
+          - neural_network
+      
+      environnement:
+        description: 'Environnement de déploiement'
+        required: false
+        default: 'dev'
+  
+  # 4. Planification (Cron) - Tous les jours à 2h du matin
+  schedule:
+    - cron: '0 2 * * *'  # Format : minute heure jour mois jour_semaine
+
+jobs:
+  afficher-contexte:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Afficher le type d'événement
+        run: |
+          echo "Événement déclencheur : ${{ github.event_name }}"
+          echo "Référence : ${{ github.ref }}"
+          echo "Branche : ${{ github.ref_name }}"
+          echo "Dépôt : ${{ github.repository }}"
+          echo "Acteur : ${{ github.actor }}"
+      
+      - name: Afficher les inputs (si déclenchement manuel)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Modèle choisi : ${{ github.event.inputs.nom_modele }}"
+          echo "Environnement : ${{ github.event.inputs.environnement }}"
