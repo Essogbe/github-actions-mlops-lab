@@ -1,0 +1,31 @@
+# Workflow 01 : Hello World - Le strict minimum
+# Objectif : Comprendre la structure de base d'un workflow GitHub Actions
+
+name: 01 - Hello World
+
+# Déclencheur : à chaque push sur n'importe quelle branche
+on: push
+
+# Jobs : ensemble de tâches à exécuter
+jobs:
+  # Nom du job (peut être ce que vous voulez)
+  premier-job:
+    # Sur quel système d'exploitation exécuter ce job
+    runs-on: ubuntu-latest
+    
+    # Étapes du job (liste de tâches)
+    steps:
+      # Étape 1 : Afficher un message simple
+      - name: Dire bonjour
+        run: echo "Bonjour depuis GitHub Actions !"
+      
+      # Étape 2 : Afficher des informations système
+      - name: Informations système
+        run: |
+          echo "Système d'exploitation : $(uname -s)"
+          echo "Version : $(uname -r)"
+          echo "Utilisateur : $(whoami)"
+      
+      # Étape 3 : Afficher la date
+      - name: Date et heure
+        run: date
