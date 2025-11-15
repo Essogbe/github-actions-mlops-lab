@@ -1,0 +1,187 @@
+# Workflow 09 : Variables d'Environnement et Contexte
+# Objectif : Utiliser des variables à différents niveaux (workflow, job, step)
+
+name: 09 - Variables d'Environnement
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_type:
+        description: 'Type de modèle à entraîner'
+        required: true
+        default: 'random_forest'
+        type: choice
+        options:
+          - random_forest
+          - svm
+          - logistic_regression
+
+# Variables globales du workflow (disponibles partout)
+env:
+  PYTHON_VERSION: '3.10'
+  MODEL_DIR: './models'
+  DATA_SIZE: '1000'
+
+jobs:
+  # Job avec ses propres variables d'environnement
+  configuration:
+    runs-on: ubuntu-latest
+    
+    # Variables spécifiques au job (écrasent les variables globales si même nom)
+    env:
+      JOB_NAME: 'Configuration'
+      LOG_LEVEL: 'INFO'
+    
+    steps:
+      - name: Afficher toutes les variables
+        # Variables spécifiques à cette étape
+        env:
+          STEP_NAME: 'Display Variables'
+        run: |
+          echo "=== VARIABLES GLOBALES (workflow) ==="
+          echo "PYTHON_VERSION: $PYTHON_VERSION"
+          echo "MODEL_DIR: $MODEL_DIR"
+          echo "DATA_SIZE: $DATA_SIZE"
+          echo ""
+          echo "=== VARIABLES DU JOB ==="
+          echo "JOB_NAME: $JOB_NAME"
+          echo "LOG_LEVEL: $LOG_LEVEL"
+          echo ""
+          echo "=== VARIABLES DE L'ÉTAPE ==="
+          echo "STEP_NAME: $STEP_NAME"
+          echo ""
+          echo "=== INPUT DU WORKFLOW ==="
+          echo "Model Type: ${{ github.event.inputs.model_type }}"
+  
+  # Job utilisant les variables GitHub Context
+  contexte-github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Variables GitHub automatiques
+        run: |
+          echo "=== CONTEXTE GITHUB ==="
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor (qui a déclenché): ${{ github.actor }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Run Number: ${{ github.run_number }}"
+          echo "Job: ${{ github.job }}"
+          echo "Workflow: ${{ github.workflow }}"
+  
+  # Job d'entraînement utilisant les variables
+  entrainement:
+    runs-on: ubuntu-latest
+    env:
+      MODEL_TYPE: ${{ github.event.inputs.model_type }}
+      RANDOM_STATE: '42'
+    
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Créer l'arborescence
+        run: |
+          mkdir -p $MODEL_DIR
+          echo "Dossier créé: $MODEL_DIR"
+      
+      - name: Installer dépendances
+        run: pip install numpy scikit-learn joblib
+      
+      - name: Entraîner le modèle
+        run: |
+          python << 'EOF'
+          import os
+          import joblib
+          from sklearn.datasets import make_classification
+          from sklearn.ensemble import RandomForestClassifier
+          from sklearn.svm import SVC
+          from sklearn.linear_model import LogisticRegression
+          from datetime import datetime
+          
+          # Récupérer les variables d'environnement
+          model_type = os.environ.get('MODEL_TYPE', 'random_forest')
+          data_size = int(os.environ.get('DATA_SIZE', '100'))
+          random_state = int(os.environ.get('RANDOM_STATE', '42'))
+          model_dir = os.environ.get('MODEL_DIR', './models')
+          
+          print(f"=== CONFIGURATION ===")
+          print(f"Model Type: {model_type}")
+          print(f"Data Size: {data_size}")
+          print(f"Random State: {random_state}")
+          print()
+          
+          # Générer des données
+          X, y = make_classification(
+              n_samples=data_size, 
+              n_features=20, 
+              random_state=random_state
+          )
+          
+          # Sélectionner le modèle
+          if model_type == 'random_forest':
+              model = RandomForestClassifier(n_estimators=100, random_state=random_state)
+          elif model_type == 'svm':
+              model = SVC(random_state=random_state)
+          else:  # logistic_regression
+              model = LogisticRegression(random_state=random_state, max_iter=200)
+          
+          # Entraîner
+          print(f"Entraînement de {type(model).__name__}...")
+          model.fit(X, y)
+          score = model.score(X, y)
+          print(f"Précision: {score:.4f}")
+          
+          # Sauvegarder avec un nom basé sur le type et timestamp
+          timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+          filename = f"{model_dir}/{model_type}_{timestamp}.pkl"
+          joblib.dump(model, filename)
+          print(f"Modèle sauvegardé: {filename}")
+          EOF
+      
+      - name: Lister les modèles
+        run: ls -lh $MODEL_DIR
+  
+  # Utiliser des sorties (outputs) entre steps
+  outputs-entre-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      # Étape qui génère une sortie
+      - name: Calculer des métriques
+        id: metrics  # ID pour référencer les outputs
+        run: |
+          pip install numpy scikit-learn
+          
+          # Calculer et exporter les résultats
+          python << 'EOF'
+          import os
+          from sklearn.datasets import make_classification
+          from sklearn.ensemble import RandomForestClassifier
+          
+          X, y = make_classification(n_samples=100, n_features=10, random_state=42)
+          model = RandomForestClassifier(n_estimators=10, random_state=42)
+          model.fit(X, y)
+          
+          accuracy = model.score(X, y)
+          n_samples = len(X)
+          
+          # Exporter vers GITHUB_OUTPUT
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"accuracy={accuracy}\n")
+              f.write(f"n_samples={n_samples}\n")
+          EOF
+      
+      # Étape qui utilise les outputs de l'étape précédente
+      - name: Afficher les métriques
+        run: |
+          echo "Précision calculée: ${{ steps.metrics.outputs.accuracy }}"
+          echo "Nombre d'échantillons: ${{ steps.metrics.outputs.n_samples }}"
