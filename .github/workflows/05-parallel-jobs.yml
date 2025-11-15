@@ -1,0 +1,95 @@
+# Workflow 05 : Jobs en Parallèle
+# Objectif : Comprendre que les jobs s'exécutent en parallèle par défaut
+
+name: 05 - Jobs Parallèles
+
+on:
+  workflow_dispatch:
+
+jobs:
+  # Job 1 : Préparation des données
+  preparation-donnees:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Simuler préparation des données
+        run: |
+          echo "Début préparation données à $(date +%T)"
+          sleep 10  # Simule un traitement de 10 secondes
+          python << 'EOF'
+          import numpy as np
+          data = np.random.randn(1000, 10)
+          print(f"Données préparées: {data.shape}")
+          EOF
+          echo "Fin préparation données à $(date +%T)"
+  
+  # Job 2 : Entraînement modèle 1 (s'exécute EN MÊME TEMPS que job 1 et 3)
+  entrainement-modele-1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Installer scikit-learn
+        run: pip install scikit-learn
+      
+      - name: Entraîner Random Forest
+        run: |
+          echo "Début entraînement Random Forest à $(date +%T)"
+          sleep 15  # Simule un entraînement de 15 secondes
+          python << 'EOF'
+          from sklearn.ensemble import RandomForestClassifier
+          from sklearn.datasets import make_classification
+          
+          X, y = make_classification(n_samples=100, n_features=10)
+          model = RandomForestClassifier(n_estimators=10)
+          model.fit(X, y)
+          print(f"Précision: {model.score(X, y):.2f}")
+          EOF
+          echo "Fin entraînement Random Forest à $(date +%T)"
+  
+  # Job 3 : Entraînement modèle 2 (s'exécute EN MÊME TEMPS que job 1 et 2)
+  entrainement-modele-2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Installer scikit-learn
+        run: pip install scikit-learn
+      
+      - name: Entraîner SVM
+        run: |
+          echo "Début entraînement SVM à $(date +%T)"
+          sleep 12  # Simule un entraînement de 12 secondes
+          python << 'EOF'
+          from sklearn.svm import SVC
+          from sklearn.datasets import make_classification
+          
+          X, y = make_classification(n_samples=100, n_features=10)
+          model = SVC()
+          model.fit(X, y)
+          print(f"Précision: {model.score(X, y):.2f}")
+          EOF
+          echo "Fin entraînement SVM à $(date +%T)"
+  
+  # Job 4 : Visualiser le temps total
+  # Ce job s'exécute aussi en parallèle !
+  timer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Afficher le temps
+        run: |
+          echo "=== ATTENTION ==="
+          echo "Tous les jobs s'exécutent EN PARALLÈLE"
+          echo "Le temps total sera celui du job le plus long (~15s)"
+          echo "Pas la somme de tous les jobs (~37s)"
+          echo "================"
