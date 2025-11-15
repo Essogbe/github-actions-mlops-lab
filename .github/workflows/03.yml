@@ -1,0 +1,59 @@
+# Workflow 03 : Configuration Python et Checkout du Code
+# Objectif : Apprendre à cloner le dépôt et configurer Python
+
+name: 03 - Setup Python & Code
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  setup-et-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Étape CRITIQUE : Cloner le code du dépôt
+      # Sans cette étape, le workflow n'a pas accès à votre code !
+      - name: Checkout du code
+        uses: actions/checkout@v4
+      
+      # Configurer Python avec une version spécifique
+      - name: Installer Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      # Vérifier l'installation
+      - name: Vérifier Python
+        run: |
+          python --version
+          pip --version
+          which python
+      
+      # # Créer un script Python simple
+      # - name: Créer un script de test
+      #   run: |
+      #     cat > test_script.py << 'EOF'
+      #     import sys
+      #     import platform
+          
+      #     print(f"Python version: {sys.version}")
+      #     print(f"Platform: {platform.platform()}")
+      #     print(f"Machine: {platform.machine()}")
+          
+      #     # Simulation d'un mini script ML
+      #     data = [1, 2, 3, 4, 5]
+      #     mean = sum(data) / len(data)
+      #     print(f"Moyenne des données: {mean}")
+      #     EOF
+      
+      # Exécuter le script
+      - name: Exécuter le script
+        run: python test_script.py
+      
+      # Installer des dépendances Python basiques
+      - name: Installer des packages
+        run: |
+          pip install numpy pandas scikit-learn
+          pip list
