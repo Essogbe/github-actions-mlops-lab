@@ -21,6 +21,7 @@ jobs:
         run: |
           echo "Début préparation données à $(date +%T)"
           sleep 10  # Simule un traitement de 10 secondes
+          pip install numpy
           python << 'EOF'
           import numpy as np
           data = np.random.randn(1000, 10)
