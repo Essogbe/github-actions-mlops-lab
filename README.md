@@ -439,7 +439,7 @@ jobs:
 ```
 
 **Note :** Si vous ne voyez pas le bouton "Run workflow", vérifiez que :
-- Vous êtes sur la branche principale (`main` ou `master`)
+- Vous êtes sur la  [branche principale](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) (`main` ou `master`) 
 - Le workflow contient bien `workflow_dispatch` dans la section `on:`
 - Vous avez les permissions nécessaires sur le dépôt
 
