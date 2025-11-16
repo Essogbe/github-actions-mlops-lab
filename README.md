@@ -320,6 +320,340 @@ steps:
 
 ---
 
+## Gestion des Secrets et Variables
+
+### Secrets GitHub
+
+Les secrets sont des variables chiffrées utilisées pour stocker des informations sensibles (clés API, tokens, mots de passe).
+
+#### Caractéristiques des secrets
+
+- **Chiffrés** : Stockés de manière sécurisée et chiffrés au repos
+- **Masqués dans les logs** : Automatiquement masqués dans les sorties des workflows
+- **Lecture seule** : Une fois créés, ils ne peuvent pas être lus, seulement mis à jour ou supprimés
+- **Scopes multiples** : Repository, Organization ou Environment
+
+#### Créer un secret au niveau du dépôt
+
+![Image ](images/6.png)
+
+![Image ](images/7.png)
+
+1. Allez dans **Settings** de votre dépôt
+2. Dans le menu latéral, cliquez sur **Secrets and variables** > **Actions**
+3. Cliquez sur **New repository secret**
+4. Donnez un nom au secret (ex: `API_KEY`)
+5. Entrez la valeur
+6. Cliquez sur **Add secret**
+
+#### Utiliser un secret dans un workflow
+
+```yaml
+name: Workflow avec Secrets
+
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Utiliser un secret
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          echo "La clé API est masquée dans les logs"
+          # La valeur du secret est disponible dans $API_KEY
+```
+
+**Important :** Les secrets ne sont jamais affichés en clair dans les logs. Si vous faites `echo ${{ secrets.API_KEY }}`, GitHub remplacera automatiquement la valeur par `***`.
+
+### Variables GitHub
+
+Les variables sont similaires aux secrets mais pour des données non sensibles.
+
+
+
+#### Différences entre Secrets et Variables
+
+| Aspect | Secrets | Variables |
+|--------|---------|-----------|
+| **Usage** | Données sensibles | Configuration non sensible |
+| **Visibilité** | Masqués dans les logs | Visibles dans les logs |
+| **Chiffrement** | Chiffrés | Non chiffrés |
+| **Lecture** | Impossible après création | Possible |
+| **Exemple** | Tokens, mots de passe | URLs, noms d'environnement |
+
+#### Créer une variable au niveau du dépôt
+
+![Image Variables ](images/8.png)
+
+1. Allez dans **Settings** de votre dépôt
+2. Cliquez sur **Secrets and variables** > **Actions**
+3. Onglet **Variables**
+4. Cliquez sur **New repository variable**
+5. Donnez un nom (ex: `DEPLOYMENT_URL`)
+6. Entrez la valeur
+7. Cliquez sur **Add variable**
+
+#### Utiliser une variable dans un workflow
+
+```yaml
+name: Workflow avec Variables
+
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Utiliser une variable
+        run: |
+          echo "Déploiement vers: ${{ vars.DEPLOYMENT_URL }}"
+          echo "Environment: ${{ vars.ENVIRONMENT }}"
+```
+
+### Scopes des Secrets et Variables
+
+#### 1. Repository Secrets/Variables
+
+**Scope :** Un seul dépôt
+
+**Utilisation :** Spécifiques à un projet
+
+**Accès :** `${{ secrets.NOM }}` ou `${{ vars.NOM }}`
+
+#### 2. Organization Secrets/Variables
+
+**Scope :** Tous les dépôts d'une organisation (ou une sélection)
+
+**Utilisation :** Valeurs partagées entre plusieurs projets
+
+**Configuration :**
+1. Allez dans les **Settings** de l'organisation
+2. **Secrets and variables** > **Actions**
+3. Créez un secret/variable d'organisation
+4. Sélectionnez les dépôts qui y ont accès
+
+**Priorité :** Les secrets de dépôt surchargent ceux de l'organisation
+
+#### 3. Environment Secrets/Variables
+
+**Scope :** Liés à un environnement spécifique (voir section suivante)
+
+**Utilisation :** Configurations spécifiques par environnement (dev, staging, production)
+
+**Accès :** Uniquement dans les jobs qui référencent l'environnement
+
+### Bonnes Pratiques pour les Secrets
+
+**À FAIRE**
+- Utiliser des secrets pour toutes les données sensibles
+- Nommer les secrets en MAJUSCULES avec underscores (ex: `DB_PASSWORD`)
+- Documenter les secrets nécessaires dans votre README
+- Utiliser des environnements pour les secrets sensibles (production)
+- Régénérer régulièrement les tokens et clés
+
+**À ÉVITER**
+- Hardcoder des secrets dans le code
+- Afficher des secrets dans les logs (même partiellement)
+- Partager des secrets entre environnements dev/prod
+- Utiliser des variables pour des données sensibles
+
+**Exemple de mauvaise pratique :**
+```yaml
+# ❌ NE JAMAIS FAIRE
+steps:
+  - name: Mauvaise pratique
+    run: echo "Mon token est abc123xyz"  # Hardcodé !
+```
+
+**Exemple de bonne pratique :**
+```yaml
+# ✅ BONNE PRATIQUE
+steps:
+  - name: Bonne pratique
+    env:
+      TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      # Le token est sécurisé et masqué
+      curl -H "Authorization: token $TOKEN" https://api.github.com
+```
+
+---
+
+## Environnements GitHub
+
+Les environnements permettent de configurer des règles de déploiement et des secrets spécifiques pour différentes phases du cycle de vie (développement, staging, production).
+
+### Qu'est-ce qu'un environnement ?
+
+Un environnement GitHub est une configuration qui regroupe :
+- Des secrets et variables spécifiques
+- Des règles de protection (approbations, délais)
+- Un historique de déploiement
+- Une URL de déploiement
+
+### Créer un environnement
+
+![Image](images/9.png)
+
+1. Allez dans **Settings** de votre dépôt
+2. Cliquez sur **Environments** dans le menu latéral
+3. Cliquez sur **New environment**
+4. Donnez un nom (ex: `production`, `staging`, `development`)
+5. Cliquez sur **Configure environment**
+
+### Configuration des environnements
+
+#### Protection Rules (Règles de protection)
+
+**Required reviewers (Réviseurs obligatoires)**
+- Définir qui doit approuver avant le déploiement
+- Maximum de 6 réviseurs
+- Utile pour la production
+
+**Wait timer (Délai d'attente)**
+- Ajouter un délai avant le déploiement (0-43200 minutes)
+- Permet des vérifications automatiques ou manuelles
+
+**Deployment branches (Branches de déploiement)**
+- Limiter les branches autorisées à déployer
+- Options :
+  - **All branches** : Toutes les branches
+  - **Protected branches** : Seulement les branches protégées
+  - **Selected branches** : Branches spécifiques (avec patterns)
+
+#### Environment Secrets et Variables
+
+Chaque environnement peut avoir ses propres secrets et variables :
+
+![Image](images/10.png)
+
+1. Dans la configuration de l'environnement
+2. Section **Environment secrets** ou **Environment variables**
+3. Cliquez sur **Add secret** ou **Add variable**
+4. Ces secrets/variables ne sont accessibles que dans les jobs utilisant cet environnement
+
+### Utiliser un environnement dans un workflow
+
+```yaml
+name: Déploiement avec Environnements
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging  # Référence l'environnement staging
+    steps:
+      - name: Déployer en staging
+        env:
+          API_KEY: ${{ secrets.API_KEY }}  # Secret de l'environnement staging
+          API_URL: ${{ vars.API_URL }}     # Variable de l'environnement staging
+        run: |
+          echo "Déploiement en staging vers $API_URL"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment:
+      name: production
+      url: https://app.example.com  # URL accessible depuis l'interface GitHub
+    steps:
+      - name: Déployer en production
+        env:
+          API_KEY: ${{ secrets.API_KEY }}  # Secret de l'environnement production
+          API_URL: ${{ vars.API_URL }}     # Variable de l'environnement production
+        run: |
+          echo "Déploiement en production vers $API_URL"
+```
+
+### Exemple d'architecture multi-environnements
+
+```yaml
+name: Pipeline Multi-Environnements
+
+on:
+  push:
+    branches: [develop, main]
+
+jobs:
+  # Développement : déploiement automatique
+  deploy-dev:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - name: Déployer en dev
+        run: echo "Déploiement automatique en dev"
+
+  # Staging : déploiement avec délai
+  deploy-staging:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Déployer en staging
+        run: echo "Déploiement en staging"
+
+  # Production : nécessite approbation manuelle
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.example.com
+    steps:
+      - name: Déployer en production
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: echo "Déploiement en production (après approbation)"
+```
+
+### Visualisation et historique des déploiements
+
+GitHub fournit une interface visuelle pour suivre les déploiements :
+
+1. Onglet **Code** du dépôt
+2. Section **Environments** (colonne de droite)
+3. Cliquez sur un environnement pour voir :
+   - Historique des déploiements
+   - Statut actuel (Active/Inactive)
+   - URL de déploiement
+   - Qui a déployé et quand
+
+
+
+**Recommandations :**
+- Utiliser des secrets différents par environnement (jamais les mêmes clés API)
+- Nommer les environnements de manière cohérente (`development`, `staging`, `production`)
+- Toujours protéger l'environnement de production avec des approbations
+- Documenter les secrets requis pour chaque environnement
+- Configurer des URLs de déploiement pour faciliter l'accès
+
+**Exemple de documentation des secrets par environnement :**
+
+## Secrets requis par environnement
+
+### Development
+- `API_KEY` : Clé API de développement
+- `DB_URL` : URL de la base de données de dev
+
+### Staging
+- `API_KEY` : Clé API de staging
+- `DB_URL` : URL de la base de données de staging
+
+### Production
+- `API_KEY` : Clé API de production (sensible !)
+- `DB_URL` : URL de la base de données de production (sensible !)
+- `SENTRY_DSN` : Pour le monitoring des erreurs
+
+
+
+
 ## Consulter et gérer vos Workflows
 
 ### Accéder à l'onglet Actions
@@ -342,7 +676,7 @@ Dans l'onglet Actions, vous trouverez :
 
 **Zone centrale - Historique des exécutions**
 - Liste chronologique de toutes les exécutions de workflows
-- Statut de chaque exécution :  Succès,  Échec,  En cours,  Annulé
+- Statut de chaque exécution : ✅ Succès, ❌ Échec, 🟡 En cours, ⚪ Annulé
 - Filtrage possible par workflow, branche, événement déclencheur, statut
 
 ### Filtrer par branche
@@ -360,7 +694,7 @@ Pour voir les workflows d'une branche spécifique :
 
 Pour voir les workflows actuellement en cours :
 
-![Image Workflow Dispacth](images/5-1.png)
+![Image Workflow Dispatch](images/5-1.png)
 
 1. Dans l'onglet Actions, les workflows en cours apparaissent en haut de la liste
 2. Icône 🟡 (jaune) avec animation pour indiquer l'exécution en cours
@@ -405,8 +739,9 @@ Les workflows avec déclencheur `workflow_dispatch` peuvent être lancés manuel
 6. Si le workflow définit des inputs, remplissez les champs requis
 7. Cliquez sur **Run workflow** (bouton vert)
 
-![Image Workflow Dispacth](images/2.png)
-![Image Workflow Dispacth](images/3.png)
+![Image Workflow Dispatch](images/2.png)
+![Image Workflow Dispatch](images/3.png)
+
 **Exemple de workflow manuel avec inputs :**
 
 ```yaml
@@ -439,7 +774,7 @@ jobs:
 ```
 
 **Note :** Si vous ne voyez pas le bouton "Run workflow", vérifiez que :
-- Vous êtes sur la  [branche principale](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) (`main` ou `master`) 
+- Vous êtes sur la [branche principale](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/changing-the-default-branch) (`main` ou `master`) 
 - Le workflow contient bien `workflow_dispatch` dans la section `on:`
 - Vous avez les permissions nécessaires sur le dépôt
 
@@ -457,7 +792,7 @@ jobs:
 
 Ce badge affiche en temps réel le statut du dernier workflow exécuté.
 
-
+---
 
 ## Workflows du Tutoriel
 
@@ -505,7 +840,7 @@ Ce tutoriel est organisé en une série de workflows progressifs pour apprendre 
 ### Pipeline complet
 
 12. **[12-pipelines-complet.yml](.github/workflows/12-pipelines-complet.yml)**  
-    Pipeline MLOps complet intégrant tous les concepts : lint, tests, build, déploiement avec gestion d'artefacts et conditions
+    Pipeline MLOps complet intégrant tous les concepts : lint, tests, build, déploiement avec gestion d'artefacts, conditions et environnements
 
 ---
 
