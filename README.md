@@ -1,6 +1,6 @@
 # Tutoriel GitHub Actions - MLOps Lab
 
-![alt text](image.png)
+![alt text](images/1.png)
 
 Ce tutoriel a été créé dans le cadre du programme de formation [**Académie des Mathématiques Appliquées (AMA)**](https://www.linkedin.com/company/bourseama/) pour apprendre à utiliser GitHub Actions dans un contexte MLOps.
 
@@ -22,7 +22,7 @@ GitHub Actions est une plateforme d'intégration continue et de déploiement con
 - **Runner** : Un serveur qui exécute vos workflows (hébergé par GitHub ou auto-hébergé)
 
 
-![alt text](image-1.png)
+![alt text](images/23.png)
 
 
 ### Avantages de GitHub Actions
