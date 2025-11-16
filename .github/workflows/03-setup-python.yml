@@ -14,9 +14,9 @@ jobs:
     
     steps:
       # Étape CRITIQUE : Cloner le code du dépôt
-      # Sans cette étape, le workflow n'a pas accès à votre code !
+      
       - name: Checkout du code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Sans cette étape, le workflow n'a pas accès à votre code !
       
       # Configurer Python avec une version spécifique
       - name: Installer Python 3.10
