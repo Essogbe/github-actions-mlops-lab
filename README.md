@@ -359,7 +359,7 @@ Pour voir les workflows d'une branche spécifique :
 ### Workflows en cours d'exécution
 
 Pour voir les workflows actuellement en cours :
-
+![Image Workflow Dispacth](images/5.png)
 1. Dans l'onglet Actions, les workflows en cours apparaissent en haut de la liste
 2. Icône 🟡 (jaune) avec animation pour indiquer l'exécution en cours
 3. Cliquez sur le workflow pour voir les détails en temps réel :
