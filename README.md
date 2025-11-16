@@ -850,3 +850,4 @@ Ce tutoriel est organisé en une série de workflows progressifs pour apprendre 
 - Github Skills : https://github.com/skills/hello-github-actions
 - Tutoriel Github Actions par Github : https://docs.github.com/en/actions/tutorials
 - Github Actions Video : https://www.youtube.com/watch?v=TLB5MY9BBa4
+- Extension Github Actions Vscode : https://marketplace.visualstudio.com/items?itemName=GitHub.vscode-github-actions
