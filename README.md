@@ -39,7 +39,7 @@ GitHub Actions est une plateforme d'intégration continue et de déploiement con
 - [GitHub Actions Marketplace](https://github.com/marketplace?type=actions)
 - [Awesome Actions](https://github.com/sdras/awesome-actions) - Liste d'actions communautaires
 
-
+---
 
 ## Guide YAML pour GitHub Actions
 
@@ -320,9 +320,144 @@ steps:
 
 ---
 
+## Consulter et gérer vos Workflows
+
+### Accéder à l'onglet Actions
+
+Pour visualiser tous les workflows de votre dépôt :
+
+1. Ouvrez votre dépôt sur GitHub
+2. Cliquez sur l'onglet **Actions** (entre "Pull requests" et "Projects")
+3. Vous accédez au tableau de bord des workflows
+
+### Vue d'ensemble des workflows
+
+Dans l'onglet Actions, vous trouverez :
+
+**Panneau de gauche - Liste des workflows**
+![Image Workflows](images/4.png)
+- Tous les workflows définis dans `.github/workflows/`
+- Chaque workflow est identifié par son nom (défini par `name:` dans le fichier YAML)
+- Le nombre d'exécutions récentes est affiché à côté de chaque workflow
+
+**Zone centrale - Historique des exécutions**
+- Liste chronologique de toutes les exécutions de workflows
+- Statut de chaque exécution :  Succès,  Échec,  En cours,  Annulé
+- Filtrage possible par workflow, branche, événement déclencheur, statut
+
+### Filtrer par branche
+
+Pour voir les workflows d'une branche spécifique :
+
+1. Dans l'onglet Actions, utilisez le menu déroulant **Branch**
+2. Sélectionnez la branche souhaitée (main, develop, feature/xyz, etc.)
+3. L'historique affichera uniquement les exécutions de cette branche
+
+**Alternative :**
+- Accédez à l'URL : `https://github.com/votre-utilisateur/votre-repo/actions?query=branch:nom-de-branche`
+
+### Workflows en cours d'exécution
+
+Pour voir les workflows actuellement en cours :
+
+1. Dans l'onglet Actions, les workflows en cours apparaissent en haut de la liste
+2. Icône 🟡 (jaune) avec animation pour indiquer l'exécution en cours
+3. Cliquez sur le workflow pour voir les détails en temps réel :
+   - Jobs en cours d'exécution
+   - Logs en direct de chaque step
+   - Temps écoulé
+
+**Annuler une exécution en cours :**
+- Cliquez sur le workflow en cours
+- Bouton **Cancel workflow** en haut à droite
+
+### Workflows déjà exécutés
+
+Pour consulter l'historique des exécutions passées :
+
+1. Dans l'onglet Actions, parcourez la liste chronologique
+2. Filtrez par statut : **Success**, **Failure**, **Cancelled**
+3. Cliquez sur une exécution pour voir :
+   - Tous les jobs et leurs statuts
+   - Les logs détaillés de chaque step
+   - Les artefacts générés (si disponibles)
+   - Le temps d'exécution total
+
+**Réexécuter un workflow :**
+- Ouvrez l'exécution terminée
+- Bouton **Re-run jobs** pour relancer le workflow
+
+### Déclencher manuellement un workflow
+
+Les workflows avec déclencheur `workflow_dispatch` peuvent être lancés manuellement.
+
+**Important :** Les workflows manuels ne sont disponibles que sur la branche principale (`main` ou `master`).
+
+**Pour déclencher un workflow manuel :**
+
+1. Allez dans l'onglet **Actions**
+2. Dans le panneau de gauche, sélectionnez le workflow souhaité
+3. Si le workflow a un déclencheur `workflow_dispatch`, vous verrez un bouton **Run workflow**
+4. Cliquez sur **Run workflow**
+5. Sélectionnez la branche (généralement `main`)
+6. Si le workflow définit des inputs, remplissez les champs requis
+7. Cliquez sur **Run workflow** (bouton vert)
+
+![Image Workflow Dispacth](images/2.png)
+![Image Workflow Dispacth](images/3.png)
+**Exemple de workflow manuel avec inputs :**
+
+```yaml
+name: Déploiement Manuel
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environnement de déploiement'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version à déployer'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Afficher les paramètres
+        run: |
+          echo "Environnement: ${{ inputs.environment }}"
+          echo "Version: ${{ inputs.version }}"
+```
+
+**Note :** Si vous ne voyez pas le bouton "Run workflow", vérifiez que :
+- Vous êtes sur la branche principale (`main` ou `master`)
+- Le workflow contient bien `workflow_dispatch` dans la section `on:`
+- Vous avez les permissions nécessaires sur le dépôt
+
+### Notifications et badges
+
+**Recevoir des notifications :**
+- GitHub vous notifie automatiquement des échecs de workflows
+- Configurez vos préférences dans Settings > Notifications
+
+**Ajouter un badge de statut dans votre README :**
+
+```markdown
+![Workflow Status](https://github.com/votre-utilisateur/votre-repo/actions/workflows/nom-workflow.yml/badge.svg)
+```
+
+Ce badge affiche en temps réel le statut du dernier workflow exécuté.
+
+---
+
 ## Workflows du Tutoriel
-
-
 
 Ce tutoriel est organisé en une série de workflows progressifs pour apprendre GitHub Actions étape par étape :
 
