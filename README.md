@@ -636,17 +636,17 @@ GitHub fournit une interface visuelle pour suivre les déploiements :
 
 **Exemple de documentation des secrets par environnement :**
 
-## Secrets requis par environnement
+Secrets requis par environnement
 
-### Development
+ Development
 - `API_KEY` : Clé API de développement
 - `DB_URL` : URL de la base de données de dev
 
-### Staging
+ Staging
 - `API_KEY` : Clé API de staging
 - `DB_URL` : URL de la base de données de staging
 
-### Production
+ Production
 - `API_KEY` : Clé API de production (sensible !)
 - `DB_URL` : URL de la base de données de production (sensible !)
 - `SENTRY_DSN` : Pour le monitoring des erreurs
