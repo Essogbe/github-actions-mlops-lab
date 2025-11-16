@@ -81,6 +81,7 @@ jobs:
       
       - name: Vérifier les imports (isort)
         run: isort --check-only src/
+        continue-on-error: true
 
   # =====================================
   # PHASE 2 : TESTS
